@@ -97,9 +97,9 @@ public class AccessorBasedTypeAdapterFactory implements TypeAdapterFactory {
 						Logger.trace("JSON write: methodClass: %s, method: %s, field name: %s, type: %s, value: %s", method.getDeclaringClass().getName(), method.getName(), name, returnValue.getClass().getName() , returnValue);
 					}
 				} catch (IllegalAccessException ex) {
-					throw new MessageException(Util.getStackTrace(ex));
+					throw new MessageException(ex, "IllegalAccessException: %s", Util.getStackTrace(ex));
 				} catch (InvocationTargetException ex) {
-					throw new MessageException(Util.getStackTrace(ex));
+					throw new MessageException(ex, "InvocationTargetException: %s", Util.getStackTrace(ex));
 				}
 			}
 			out.endObject();
@@ -149,11 +149,11 @@ public class AccessorBasedTypeAdapterFactory implements TypeAdapterFactory {
 				in.endObject();
 				return (T) o;
 			} catch (InstantiationException ex) {
-				throw new MessageException(Util.getStackTrace(ex));
+				throw new MessageException(ex, "InstantiationException: %s", Util.getStackTrace(ex));
 			} catch (IllegalAccessException ex) {
-				throw new MessageException(Util.getStackTrace(ex));
+				throw new MessageException(ex, "IllegalAccessException: %s", Util.getStackTrace(ex));
 			} catch (InvocationTargetException ex) {
-				throw new MessageException(Util.getStackTrace(ex));
+				throw new MessageException(ex, "InvocationTargetException: %s", Util.getStackTrace(ex));
 			} catch (JsonSyntaxException ex) {
 				Logger.error("Error while processing %s: %s", currentName, ex);
 			}
