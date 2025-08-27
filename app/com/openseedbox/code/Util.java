@@ -45,7 +45,11 @@ public class Util {
 	}
 
 	public static String URLEncode(String s) {		
-		return JavaExtensions.urlEncode(s);
+		try {
+			return URLEncoder.encode(s, "UTF-8");
+		} catch (UnsupportedEncodingException ex) {
+			return s;
+		}
 	}
 
 	public static String URLDecode(String s) {
