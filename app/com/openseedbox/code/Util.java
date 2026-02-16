@@ -38,10 +38,15 @@ public class Util {
 		}
 		if (Play.mode == Play.Mode.DEV) {
 			return ExceptionUtils.getStackTrace(t);
-		} else {
-			//Mails.sendError(t, Http.Request.current.get());
-			return "An unhandled exception occured! The developers have been notified.";
 		}
+		// У prod показуємо справжню причину (message + cause), щоб бачити "Connection refused", "408", "Backend isnt running" тощо
+		String msg = t.getMessage() != null ? t.getMessage() : t.getClass().getSimpleName();
+		Throwable cause = t.getCause();
+		if (cause != null) {
+			String cmsg = cause.getMessage() != null ? cause.getMessage() : cause.getClass().getSimpleName();
+			msg = msg + " | Caused by: " + cmsg;
+		}
+		return msg;
 	}
 
 	public static String URLEncode(String s) {		
