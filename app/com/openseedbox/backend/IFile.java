@@ -99,5 +99,16 @@ public interface IFile {
 	 */
 	@SerializedAccessorName("download-link")
 	public String getDownloadLink();
+
+	/**
+	 * Gets the play (inline) link for browser playback. May be null if not supported (e.g. non-Node backend).
+	 */
+	@SerializedAccessorName("play-link")
+	public String getPlayLink();
+
+	/**
+	 * True if the file is a video (by extension), for showing Watch button.
+	 */
+	public boolean isVideo();
 	
 }

@@ -142,8 +142,15 @@ public class AccessorBasedTypeAdapterFactory implements TypeAdapterFactory {
 								//call the set method, passing in the value	
 								Class paramType = paramTypes[0];
 								setterMethod.invoke(o, gson.fromJson(in, paramType));
-							}							
-						}						
+							} else {
+								in.skipValue();
+							}
+						} else {
+							in.skipValue();
+						}
+					} else {
+						// unknown key — skip value so reader stays in sync
+						in.skipValue();
 					}
 				}
 				in.endObject();
@@ -155,9 +162,9 @@ public class AccessorBasedTypeAdapterFactory implements TypeAdapterFactory {
 			} catch (InvocationTargetException ex) {
 				throw new MessageException(ex, "InvocationTargetException: %s", Util.getStackTrace(ex));
 			} catch (JsonSyntaxException ex) {
-				Logger.error("Error while processing %s: %s", currentName, ex);
+				Logger.error("Error while deserializing %s (key=%s): %s", requestedClass.getSimpleName(), currentName, ex.getMessage());
+				throw new MessageException(ex, "JSON deserialization failed at key '%s': %s", currentName, ex.getMessage());
 			}
-			return null;
 		}
 		
 		//check this class, then interfaces
