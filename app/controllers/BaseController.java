@@ -164,8 +164,7 @@ public abstract class BaseController extends Controller {
 				"Something went wrong. Reference id: " + reqId);
 
 			// For JSON clients, surface a 500 so JS / Playwright can branch
-			// on res.ok. HTML form posts get the redirect target's flash on
-			// the next navigation. Heuristic: ext=json query param OR
+			// on res.ok. Heuristic: ext=json query param OR
 			// Accept: application/json header.
 			Http.Header acceptHdr = request.headers.get("accept");
 			String accept = acceptHdr != null ? acceptHdr.value() : "";
@@ -174,12 +173,27 @@ public abstract class BaseController extends Controller {
 				response.status = 500;
 				renderJSON(Collections.singletonMap("error", "internal_error"));
 			}
-			// Don't rethrow — avoids leaking the stack trace to HTML
-			// clients. Play 1 treats a @Catch handler that returns normally
-			// as having handled the exception; the response body is empty
-			// for the request that threw (the original action never reached
-			// its render() / redirect() call), but the flash cookie carries
-			// the Reference id forward to the user's next navigation.
+
+			// HTML clients: short-circuit Play 1's default 500 handler by
+			// throwing a redirect Result. Returning normally from @Catch is
+			// NOT enough — Play 1 still walks up to its outer error handler
+			// and renders the bare /500.html page, which masks the flash
+			// we just set. Redirecting to a safe page surfaces the flash
+			// on the next navigation and gives the user something to look
+			// at instead of a stack trace.
+			//
+			// Target: prefer the Referer (so an admin who threw mid-action
+			// lands back where they were), otherwise fall back to a known
+			// admin-safe page. Either way, redirect throws a play.mvc.Redirect
+			// Result that short-circuits the outer error handler — that is
+			// the only Play-1 idiom for "I handled this; don't run the
+			// default 500 path."
+			Http.Header refererHdr = request.headers.get("referer");
+			String referer = refererHdr != null ? refererHdr.value() : null;
+			if (referer != null && !referer.isEmpty()) {
+				redirect(referer);
+			}
+			redirect("/");
 		}
 	}
 }
