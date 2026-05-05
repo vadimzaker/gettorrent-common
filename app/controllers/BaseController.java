@@ -182,18 +182,31 @@ public abstract class BaseController extends Controller {
 			// on the next navigation and gives the user something to look
 			// at instead of a stack trace.
 			//
-			// Target: prefer the Referer (so an admin who threw mid-action
-			// lands back where they were), otherwise fall back to a known
-			// admin-safe page. Either way, redirect throws a play.mvc.Redirect
-			// Result that short-circuits the outer error handler — that is
-			// the only Play-1 idiom for "I handled this; don't run the
-			// default 500 path."
+			// Target priority:
+			//   1. Referer header (so a click on /admin/users → POST →
+			//      throw → @Catch → redirect lands the admin back on
+			//      /admin/users with the flash visible).
+			//   2. "/client" — a leaf endpoint that renders main.html
+			//      directly (NO controller-to-controller call inside,
+			//      unlike "/" → Main.index → Client.index which Play 1
+			//      implements as a CHAINED 302 redirect that drops the
+			//      flash cookie between the hops).
+			//
+			// Either way, redirect throws a play.mvc.Redirect Result that
+			// short-circuits the outer error handler — that is the only
+			// Play-1 idiom for "I handled this; don't run the default 500
+			// path."
+			//
+			// Why not just rely on referer for everything: address-bar
+			// navigation (or Playwright's page.goto, or curl without
+			// -e) leaves Referer absent, and we still need a sane fallback
+			// that surfaces the flash.
 			Http.Header refererHdr = request.headers.get("referer");
 			String referer = refererHdr != null ? refererHdr.value() : null;
 			if (referer != null && !referer.isEmpty()) {
 				redirect(referer);
 			}
-			redirect("/");
+			redirect("/client");
 		}
 	}
 }
