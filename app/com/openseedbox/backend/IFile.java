@@ -110,5 +110,20 @@ public interface IFile {
 	 * True if the file is a video (by extension), for showing Watch button.
 	 */
 	public boolean isVideo();
-	
+
+	/**
+	 * True if the file is audio-only (mp3, flac, m4a, wav, aac, ogg, opus, …).
+	 * Mirror of {@link #isVideo()} — both feed into {@link #isPlayable()}.
+	 */
+	public boolean isAudio();
+
+	/**
+	 * True if the file is playable in the HLS player — video OR audio. Use this
+	 * in place of {@link #isVideo()} when the caller's intent is "can we show
+	 * the Watch / Play affordance?". The player iframe reads {@code audioOnly}
+	 * from /stream/source_info and adapts its chrome (hide &lt;video&gt;,
+	 * fullscreen, PiP, quality) when the source is audio-only.
+	 */
+	public boolean isPlayable();
+
 }
