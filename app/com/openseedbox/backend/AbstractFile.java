@@ -16,6 +16,17 @@ public abstract class AbstractFile implements IFile {
 	));
 
 	/**
+	 * Subtitle file extensions. Used for the SUBTITLE bucket in the grouped
+	 * file view — these are NOT playable in the HLS player (no transcode),
+	 * but we still want to surface them as their own section so the user
+	 * can download a .srt next to the .mkv they came with instead of
+	 * hunting through "Other".
+	 */
+	private static final Set<String> SUBTITLE_EXTENSIONS = new HashSet<String>(Arrays.asList(
+		"srt", "sub", "vtt", "ass", "ssa", "idx", "smi", "sbv"
+	));
+
+	/**
 	 * Single source of truth for "is this filename playable in the HLS player?".
 	 * Used by torrent-file rows (via instance isVideo()) AND by DirectDownload
 	 * (which is not an IFile) — both must agree on the predicate so a Direct
@@ -50,6 +61,18 @@ public abstract class AbstractFile implements IFile {
 	 */
 	public static boolean isPlayableExtension(String name) {
 		return isVideoExtension(name) || isAudioExtension(name);
+	}
+
+	/**
+	 * Single source of truth for "is this filename a subtitle?". Mirror of
+	 * isVideoExtension / isAudioExtension — used by the grouped file view to
+	 * place .srt / .vtt / etc. into their own section.
+	 */
+	public static boolean isSubtitleExtension(String name) {
+		if (name == null) return false;
+		int i = name.lastIndexOf('.');
+		if (i < 0 || i >= name.length() - 1) return false;
+		return SUBTITLE_EXTENSIONS.contains(name.substring(i + 1).toLowerCase());
 	}
 
 	public double getPercentComplete() {
@@ -87,6 +110,28 @@ public abstract class AbstractFile implements IFile {
 
 	public boolean isPlayable() {
 		return isPlayableExtension(getName());
+	}
+
+	/**
+	 * True if the file is a subtitle (.srt, .vtt, …). Used by the grouped
+	 * file view to bucket files into VIDEO / AUDIO / SUBTITLE / OTHER.
+	 */
+	public boolean isSubtitle() {
+		return isSubtitleExtension(getName());
+	}
+
+	/**
+	 * Coarse media-type bucket for the grouped file view. Decided by the
+	 * existing isVideo / isAudio / isSubtitle predicates — anything else
+	 * (archives, executables, README.txt, …) ends up in OTHER. Order of
+	 * checks matters: a file that matched both VIDEO and AUDIO extension
+	 * lists (currently impossible — sets are disjoint) would prefer VIDEO.
+	 */
+	public MediaCategory getMediaCategory() {
+		if (isVideo()) return MediaCategory.VIDEO;
+		if (isAudio()) return MediaCategory.AUDIO;
+		if (isSubtitle()) return MediaCategory.SUBTITLE;
+		return MediaCategory.OTHER;
 	}
 
 }

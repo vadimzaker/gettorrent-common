@@ -126,4 +126,19 @@ public interface IFile {
 	 */
 	public boolean isPlayable();
 
+	/**
+	 * True if the file is a subtitle (.srt, .vtt, .ass, …). Not playable in
+	 * the HLS player on its own, but the grouped file view surfaces these in
+	 * their own section so they don't get lost under "Other".
+	 */
+	public boolean isSubtitle();
+
+	/**
+	 * Coarse media-type bucket (VIDEO / AUDIO / SUBTITLE / OTHER) used by
+	 * the grouped torrent-file view. Decided by isVideo / isAudio /
+	 * isSubtitle — single source of truth, do NOT bucket by extension
+	 * directly in callers.
+	 */
+	public MediaCategory getMediaCategory();
+
 }
